@@ -1,7 +1,6 @@
-#include <b64.h>
-#include <HttpClient.h>
 #include "Reporter.h"
 #include <SPI.h>
+#include <HttpClient.h>
 #include <Ethernet.h>
 #include <EthernetClient.h>
 ReportParam::ReportParam(){
@@ -11,10 +10,11 @@ ReportParam::ReportParam( String name, String value){
     this->name = name;
     this->value = value;
 }
-Reporter::Reporter(void * mac, char * base_domain){
+Reporter::Reporter(void * mac, String base_domain,String sub_url){
     this->mac = mac;
     this->base_domain = base_domain;
-    Serial.println(this->base_domain);
+    this->sub_url = sub_url; 
+    //Serial.println(this->base_domain.c_str());
 }
 Reporter::Reporter(){
     OnResultReport = 0;
@@ -30,21 +30,20 @@ class setupPredicate : public Predicate<ReportCollector*>
     }
 }setupfunc;
 void Reporter::setup(){
-    Ethernet.init(10);
     this->dataCollections.ForEach(setupfunc);
-    Serial.println(F("init DHCP..."));
-    
+    Serial.println("Trying init DHCP...");
     while (Ethernet.begin((byte*)this->mac) != 1)
     {
-        Serial.println(F("IP Error"));
-        delay(1000);
+        Serial.println("Error getting IP address via DHCP, trying again...");
+        delay(100);
     }  
     Serial.println(Ethernet.localIP());
 }
 void Reporter::addCollector(ReportCollector * dTemplate){
     dataCollections.PushBack(dTemplate);
     dTemplate->reporter = this;
-    dTemplate->base_domain = this->base_domain;
+    dTemplate->base_domain = &this->base_domain;
+    dTemplate->sub_url = &this->sub_url;
 }
 class deleteRPPredicate : public Predicate<ReportParam*>
 {
@@ -84,86 +83,86 @@ ReportCollector::ReportCollector(String name){
     this->name = name;
 }
 
-//namespace{
-//        unsigned char h2int(char c)
-//    {
-//        if (c >= '0' && c <='9'){
-//            return((unsigned char)c - '0');
-//        }
-//        if (c >= 'a' && c <='f'){
-//            return((unsigned char)c - 'a' + 10);
-//        }
-//        if (c >= 'A' && c <='F'){
-//            return((unsigned char)c - 'A' + 10);
-//        }
-//        return(0);
-//    }
-//    String urldecode(String str)
-//    {
-//        
-//        String encodedString="";
-//        char c;
-//        char code0;
-//        char code1;
-//        for (int i =0; i < str.length(); i++){
-//            c=str.charAt(i);
-//        if (c == '+'){
-//            encodedString+=' ';  
-//        }else if (c == '%') {
-//            i++;
-//            code0=str.charAt(i);
-//            i++;
-//            code1=str.charAt(i);
-//            c = (h2int(code0) << 4) | h2int(code1);
-//            encodedString+=c;
-//        } else{
-//            
-//            encodedString+=c;  
-//        }
-//        
-//        yield();
-//        }
-//        
-//    return encodedString;
-//    }
-//
-//    String urlencode(String str)
-//    {
-//        String encodedString="";
-//        char c;
-//        char code0;
-//        char code1;
-//        char code2;
-//        for (int i =0; i < str.length(); i++){
-//        c=str.charAt(i);
-//        if (c == ' '){
-//            encodedString+= '+';
-//        } else if (isalnum(c)){
-//            encodedString+=c;
-//        } else{
-//            code1=(c & 0xf)+'0';
-//            if ((c & 0xf) >9){
-//                code1=(c & 0xf) - 10 + 'A';
-//            }
-//            c=(c>>4)&0xf;
-//            code0=c+'0';
-//            if (c > 9){
-//                code0=c - 10 + 'A';
-//            }
-//            code2='\0';
-//            encodedString+='%';
-//            encodedString+=code0;
-//            encodedString+=code1;
-//            //encodedString+=code2;
-//        }
-//        yield();
-//        }
-//        return encodedString;
-//        
-//    }
-//
-//
-//}
+namespace{
+        unsigned char h2int(char c)
+    {
+        if (c >= '0' && c <='9'){
+            return((unsigned char)c - '0');
+        }
+        if (c >= 'a' && c <='f'){
+            return((unsigned char)c - 'a' + 10);
+        }
+        if (c >= 'A' && c <='F'){
+            return((unsigned char)c - 'A' + 10);
+        }
+        return(0);
+    }
+    String urldecode(String str)
+    {
+        
+        String encodedString="";
+        char c;
+        char code0;
+        char code1;
+        for (int i =0; i < str.length(); i++){
+            c=str.charAt(i);
+        if (c == '+'){
+            encodedString+=' ';  
+        }else if (c == '%') {
+            i++;
+            code0=str.charAt(i);
+            i++;
+            code1=str.charAt(i);
+            c = (h2int(code0) << 4) | h2int(code1);
+            encodedString+=c;
+        } else{
+            
+            encodedString+=c;  
+        }
+        
+        yield();
+        }
+        
+    return encodedString;
+    }
+
+    String urlencode(String str)
+    {
+        String encodedString="";
+        char c;
+        char code0;
+        char code1;
+        char code2;
+        for (int i =0; i < str.length(); i++){
+        c=str.charAt(i);
+        if (c == ' '){
+            encodedString+= '+';
+        } else if (isalnum(c)){
+            encodedString+=c;
+        } else{
+            code1=(c & 0xf)+'0';
+            if ((c & 0xf) >9){
+                code1=(c & 0xf) - 10 + 'A';
+            }
+            c=(c>>4)&0xf;
+            code0=c+'0';
+            if (c > 9){
+                code0=c - 10 + 'A';
+            }
+            code2='\0';
+            encodedString+='%';
+            encodedString+=code0;
+            encodedString+=code1;
+            //encodedString+=code2;
+        }
+        yield();
+        }
+        return encodedString;
+        
+    }
+
+
+}
 class paramBuilderPredicate : public Predicate<ReportParam*>
 {
     public:
@@ -171,36 +170,35 @@ class paramBuilderPredicate : public Predicate<ReportParam*>
     void operator() (ReportParam* &element) { 
         if (result->length() > 0)
             *result += "&";
-        *result += element->name + "=" + element->value;
+        *result += urlencode(element->name) + "=" + urlencode(element->value);
     }
 }paramBuilderfunc;
 void ReportCollector::report(Vector<ReportParam*> & paramCollections){
          
     int err =0;
-    EthernetClient Clinet;
-    HttpClient http(Clinet);
-    int kNetworkTimeout = 5*1000;
+    EthernetClient c;
+    HttpClient http(c);
+    int kNetworkTimeout = 30*1000;
     int kNetworkDelay = 1000;
 
     String queryResult = "";
     paramBuilderfunc.result = &queryResult;
     paramCollections.ForEach(paramBuilderfunc);
    
-    queryResult = "arduino.php?" + queryResult;
-    //String fullURL = *this->base_domain + queryResult;
-    Serial.println(BASE_DOMAIN);
-    err = http.get("http://es01.falcontech.co.id", queryResult.c_str());
+    queryResult = *this->sub_url + "?" + queryResult;
+    String fullURL = *this->base_domain + queryResult;
+    Serial.println(fullURL);
+    err = http.get(this->base_domain->c_str(), queryResult.c_str());
  
     if (err == 0)
     {
+        
         err = http.skipResponseHeaders();
-            Serial.print("Return Code :");
-            Serial.println(http.responseStatusCode());
-            
+            Serial.println(err);
     if (err >= 0)
       {
         int bodyLen = http.contentLength();
-         Serial.print(F("L"));
+         Serial.print("Content length is: ");
          Serial.println(bodyLen);
         // Serial.println();
         // Serial.println("Body returned follows:");
@@ -232,12 +230,11 @@ void ReportCollector::report(Vector<ReportParam*> & paramCollections){
       }
       else
       {
-//        Serial.print("Failed to skip response headers: ");
-//        Serial.println(err);
+        Serial.print("Failed to skip response headers: ");
+        Serial.println(err);
       }
     }
     if (this->reporter->OnResultReport != 0){
-        this->reporter->OnResultReport(this, (err),&paramCollections);
+        this->reporter->OnResultReport(this, (err),paramCollections);
     }
-    
 }
