@@ -1,6 +1,6 @@
 #include <arduino.h>
 #include "vector.h"
-
+#define BASE_DOMAIN "156.67.218.39"
 
 struct ReportParam{
     String name;
@@ -14,7 +14,7 @@ class ReportCollector{
     friend class setupPredicate;
     friend class Reporter;
 private:
-       String * base_domain;
+       char * base_domain;
        String name;
 protected:
     Reporter * reporter;
@@ -30,15 +30,14 @@ public:
 class Reporter {
 private:
     void *  mac;
-    String base_domain;
+    char * base_domain;
     Vector<ReportCollector*> dataCollections;
 public:
-    void  (*OnResultReport)(ReportCollector *sender,int errCode,Vector<ReportParam*> & paramCollections);
-    Reporter(void * mac, String base_domain);
+    void  (*OnResultReport)(ReportCollector *sender,int errCode,Vector<ReportParam*> * paramCollections);
+    Reporter(void * mac, char *  base_domain);
     Reporter();
     ~Reporter();
     void setup();
     void update();
     void addCollector(ReportCollector * dTemplate);
 };
-

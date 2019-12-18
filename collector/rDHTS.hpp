@@ -1,10 +1,15 @@
+
+#include <arduino.h>
+#include "../Sensor.h"
 class rDHTS : public ReportCollector{
   protected:
     void setup(){
-        Serial.println("rdhts setup");
+        Serial.println(F("rdhts init"));
+        
     }
     void update()override{
-       Serial.print("RDHTS UPDATE ");
+        Serial.println(F("Report"));
+        
     }
     void grabParameter(Vector<ReportParam*> & paramCollections)override
     {
@@ -14,6 +19,6 @@ class rDHTS : public ReportCollector{
     }
 
     public:
-    rDHTS():ReportCollector("DHTS")
+    rDHTS():ReportCollector(F("DHTS"))
     {}
 };
