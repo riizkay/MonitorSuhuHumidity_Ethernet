@@ -1,6 +1,7 @@
+#pragma once
 #include <arduino.h>
 #include "vector.h"
-
+#define ENC_ENABLE 10
 
 struct ReportParam{
     String name;
@@ -31,12 +32,15 @@ public:
 class Reporter {
 private:
     void *  mac;
+    void *  ip;
+    void *  dns;
     String base_domain;
     String sub_url;
     Vector<ReportCollector*> dataCollections;
 public:
     void  (*OnResultReport)(ReportCollector *sender,int errCode,Vector<ReportParam*> & paramCollections);
-    Reporter(void * mac, String base_domain, String sub_url );
+    Reporter(void * mac,void *ip, void *dns, String base_domain,String sub_url);
+    Reporter(void * mac, String base_domain,String sub_url);
     Reporter();
     ~Reporter();
     void setup();

@@ -10,6 +10,14 @@ ReportParam::ReportParam( String name, String value){
     this->name = name;
     this->value = value;
 }
+Reporter::Reporter(void * mac,void * ip, void * dns, String base_domain,String sub_url){
+    this->mac = mac;
+    this->ip = ip;
+    this->dns = dns;
+    this->base_domain = base_domain;
+    this->sub_url = sub_url; 
+    //Serial.println(this->base_domain.c_str());
+}
 Reporter::Reporter(void * mac, String base_domain,String sub_url){
     this->mac = mac;
     this->base_domain = base_domain;
@@ -30,14 +38,28 @@ class setupPredicate : public Predicate<ReportCollector*>
     }
 }setupfunc;
 void Reporter::setup(){
+    Ethernet.init(ENC_ENABLE);
     this->dataCollections.ForEach(setupfunc);
-    Serial.println("Trying init DHCP...");
-    while (Ethernet.begin((byte*)this->mac) != 1)
-    {
-        Serial.println("Error getting IP address via DHCP, trying again...");
-        delay(100);
-    }  
+    // start the Ethernet connection:
+  Serial.println("Initialize Ethernet with DHCP:");
+  if (Ethernet.begin(mac) == 0) {
+    Serial.println("Failed to configure Ethernet using DHCP");
+    // Check for Ethernet hardware present
+    if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+      Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
+      while (true) {
+        delay(1); // do nothing, no point running without Ethernet hardware
+      }
+    }
+    if (Ethernet.linkStatus() == LinkOFF) {
+      Serial.println("Ethernet cable is not connected.");
+    }
+    // try to congifure using IP address instead of DHCP:
+    Ethernet.begin(mac, ip, dns);
+  } else {
+    Serial.print("  DHCP assigned IP ");
     Serial.println(Ethernet.localIP());
+  }
 }
 void Reporter::addCollector(ReportCollector * dTemplate){
     dataCollections.PushBack(dTemplate);
