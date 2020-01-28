@@ -10,7 +10,7 @@
 //#include "collector/SensorCounter.hpp"
 #define BASE_DOMAIN "es02.falcontech.co.id"
 #define SUB_URL "/logger/add-record"
-#define DEVICE_ID 1
+#define DEVICE_ID 2005
 #define DELAY_THREAD 5000
 #define ENC_ENABLE 10
 #define SD_ENABLE 4
@@ -49,6 +49,13 @@ void onResultReport(ReportCollector *sender,int err,Vector<ReportParam*> & param
 }
 void setup() {
   Serial.begin(9600);
+  //pinMode(SD_ENABLE,OUTPUT);
+  pinMode(13,OUTPUT);
+  digitalWrite(13,LOW);
+  
+  pinMode(ENC_ENABLE,OUTPUT);
+  digitalWrite(ENC_ENABLE, HIGH);
+  
   Logger.setup();
   //conf.saveConfiguration("/Config/config.txt");
   conf.loadConfiguration("/Config/config.txt");

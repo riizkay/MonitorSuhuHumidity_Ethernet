@@ -105,11 +105,11 @@ void Configuration::printFile(const char *filename) {
 
 
 void Log::setup() {
-    Serial.print(F("Initializing SD card..."));
-
+    Serial.println(F("Initializing SD card..."));
+    
     // see if the card is present and can be initialized:
-    if (!SD.begin(SD_ENABLE)) {
-    Serial.println(F("Card failed, or not present"));
+    while (!SD.begin(SD_ENABLE)) {
+    Serial.println(F("Detecting SDCard"));
     // don't do anything more:
     delay(1000);
     }
