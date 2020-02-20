@@ -222,8 +222,8 @@ void ReportCollector::report(Vector<ReportParam*> & paramCollections){
         int bodyLen = http.contentLength();
          Serial.print("Content length is: ");
          Serial.println(bodyLen);
-        // Serial.println();
-        // Serial.println("Body returned follows:");
+         Serial.println();
+         Serial.println("Body returned follows:");
       
         // Now we've got to the body, so we can print it out
         unsigned long timeoutStart = millis();
@@ -236,7 +236,7 @@ void ReportCollector::report(Vector<ReportParam*> & paramCollections){
             {
                 c = http.read();
                 // Print out this character
-                //Serial.print(c);
+                Serial.print(c);
                
                 bodyLen--;
                 // We read something, reset the timeout counter
