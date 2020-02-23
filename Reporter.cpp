@@ -211,14 +211,15 @@ void ReportCollector::report(Vector<ReportParam*> & paramCollections){
     String fullURL = *this->base_domain + queryResult;
     Serial.println(fullURL);
     err = http.get(this->base_domain->c_str(), queryResult.c_str());
- 
+    Serial.print("Response : ");
+    Serial.println(http.responseStatusCode());
     if (err == 0)
     {
-        
         err = http.skipResponseHeaders();
-            Serial.println(err);
+        Serial.println(err);
     if (err >= 0)
       {
+        
         int bodyLen = http.contentLength();
          Serial.print("Content length is: ");
          Serial.println(bodyLen);
@@ -255,6 +256,7 @@ void ReportCollector::report(Vector<ReportParam*> & paramCollections){
         Serial.print("Failed to skip response headers: ");
         Serial.println(err);
       }
+      http.stop();
     }
     if (this->reporter->OnResultReport != 0){
         this->reporter->OnResultReport(this, (err),paramCollections);
